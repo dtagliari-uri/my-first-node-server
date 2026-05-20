@@ -2,7 +2,10 @@ require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const app = express();
-
+const swaggerUi = require('swagger-ui-express');
+const fs = require('fs');
+const path = require('path');
+const jsYaml = require('js-yaml');
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -19,6 +22,15 @@ app.use(express.json());
 app.get('/', (req, res) => {
     res.send('Sou o Projeto de Node + Express!');
 });
+
+
+// Lê o arquivo YAML e converte para objeto JavaScript
+const swaggerFilePath = path.join(__dirname, 'swagger.yaml');
+const swaggerDocument = jsYaml.load(fs.readFileSync(swaggerFilePath, 'utf8'));
+
+// Configura a rota da documentação
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 
 // Create (POST)
 app.post('/users', async (req, res) => {
