@@ -8,6 +8,9 @@ const path = require('path');
 const jsYaml = require('js-yaml');
 const { Pool } = require('pg');
 
+/* IMPORTA MIDDLEWARE */
+const verifyToken = require('./middlewares/verifyToken');
+
 const pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
@@ -18,6 +21,9 @@ const pool = new Pool({
 
 app.use(cors());
 app.use(express.json());
+
+const authRoutes = require('./routes/auth');
+app.use(authRoutes);
 
 app.get('/', (req, res) => {
     res.send('Sou o Projeto de Node + Express!');
@@ -31,6 +37,8 @@ const swaggerDocument = jsYaml.load(fs.readFileSync(swaggerFilePath, 'utf8'));
 // Configura a rota da documentação
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+
+app.use(authRoutes);
 
 // Create (POST)
 app.post('/users', async (req, res) => {
@@ -86,7 +94,7 @@ app.delete('/users/:id', async (req, res) => {
     }
 });
 
-app.get('/posts', (req, res) => {
+app.get('/posts', verifyToken, (req, res) => {
     res.send([{
         "id": 1,
         "titulo": "Lançamento do novo sistema",
